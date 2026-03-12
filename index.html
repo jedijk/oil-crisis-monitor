@@ -73,56 +73,40 @@ return score;
 
 async function runMonitor(){
 
-document.getElementById("dashboard").innerHTML = "Loading...";
+document.getElementById("dashboard").innerHTML="Loading...";
 
-try{
+const res = await fetch("/api/prices");
+const data = await res.json();
 
-const vix = await getPrice("^VIX");
-const brent = await getPrice("BZ=F");
+const vix = data.vix;
+const brent = data.brent;
 
 const hormuzTraffic = 28;
 const tankerRate = 120000;
 
-const score = riskScore(vix, brent);
+let score = 0;
 
-let status = "Normal";
+if(vix>25) score++;
+if(vix>35) score+=2;
+if(brent>100) score++;
+if(brent>120) score+=2;
 
-if(score >= 4) status = "Stress";
-if(score >= 6) status = "Crisis";
+let status="Normal";
+if(score>=4) status="Stress";
+if(score>=6) status="Crisis";
 
 document.getElementById("dashboard").innerHTML = `
 
-<div class="card">
-<h3>VIX</h3>
-<p>${vix.toFixed(2)}</p>
-</div>
-
-<div class="card">
-<h3>Brent</h3>
-<p>$${brent.toFixed(2)}</p>
-</div>
-
-<div class="card">
-<h3>Hormuz Traffic</h3>
-<p>${hormuzTraffic} tankers/day</p>
-</div>
-
-<div class="card">
-<h3>VLCC Rate</h3>
-<p>$${tankerRate}/day</p>
-</div>
-
-<div class="card">
-<h3>Risk Score</h3>
-<p>${score}</p>
-</div>
-
-<div class="card">
-<h3>Status</h3>
-<p>${status}</p>
-</div>
+<div class="card"><h3>VIX</h3>${vix}</div>
+<div class="card"><h3>Brent</h3>$${brent}</div>
+<div class="card"><h3>Hormuz Traffic</h3>${hormuzTraffic}</div>
+<div class="card"><h3>VLCC Rates</h3>$${tankerRate}</div>
+<div class="card"><h3>Risk Score</h3>${score}</div>
+<div class="card"><h3>Status</h3>${status}</div>
 
 `;
+
+}
 
 }
 

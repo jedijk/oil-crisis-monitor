@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Oil Crisis Monitor</title>
+<style>
+body{
+font-family: Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+padding:40px;
+}
+.card{
+background:#1e293b;
+padding:20px;
+margin:20px;
+border-radius:10px;
+display:inline-block;
+min-width:250px;
+}
+button{
+padding:12px 20px;
+font-size:16px;
+border:none;
+border-radius:6px;
+background:#22c55e;
+color:white;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🌍 Oil Crisis Monitor</h1>
+
+<button onclick="runMonitor()">Run Monitor</button>
+
+<div id="dashboard"></div>
+
+<script>
+
+async function getPrice(symbol){
+
+const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
+const res = await fetch(url);
+const data = await res.json();
+
+return data.quoteResponse.result[0].regularMarketPrice;
+
+}
+
+function riskScore(vix, brent, tankerRate, hormuzTraffic){
+
+let score = 0;
+
+if(vix>25) score+=1;
+if(vix>35) score+=2;
+
+if(brent>100) score+=1;
+if(brent>120) score+=2;
+
+if(tankerRate>150000) score+=2;
+
+if(hormuzTraffic<30) score+=2;
+
+return score;
+
+}
+
+async function runMonitor(){
+
+const vix = await getPrice("^VIX");
+const brent = await getPrice("BZ=F");
+
+/* placeholder values until APIs added */
+
+const tankerRate = 120000;
+const hormuzTraffic = 28;
+
+const score = riskScore(vix, brent, tankerRate, hormuzTraffic);
+
+let status="Normal";
+
+if(score>=6) status="Crisis";
+else if(score>=3) status="Stress Building";
+
+document.getElementById("dashboard").innerHTML = `
+
+<div class="card">
+<h2>VIX</h2>
+<p>${vix}</p>
+</div>
+
+<div class="card">
+<h2>Brent</h2>
+<p>$${brent}</p>
+</div>
+
+<div class="card">
+<h2>Hormuz Traffic</h2>
+<p>${hormuzTraffic} tankers/day</p>
+</div>
+
+<div class="card">
+<h2>VLCC Rate</h2>
+<p>$${tankerRate}/day</p>
+</div>
+
+<div class="card">
+<h2>Risk Score</h2>
+<p>${score}</p>
+</div>
+
+<div class="card">
+<h2>Status</h2>
+<p>${status}</p>
+</div>
+
+`;
+
+}
+
+</script>
+
+</body>
+</html>

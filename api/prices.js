@@ -1,26 +1,28 @@
-export default async function handler(request, response) {
+export default async function handler(req, res) {
 
   try {
 
-    const fetchPrice = async (symbol) => {
-      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.quoteResponse.result[0].regularMarketPrice;
-    };
+    const vixRes = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX");
+    const vixData = await vixRes.json();
 
-    const vix = await fetchPrice("^VIX");
-    const brent = await fetchPrice("BZ=F");
+    const brentRes = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/BZ=F");
+    const brentData = await brentRes.json();
 
-    response.status(200).json({
-      vix: vix,
-      brent: brent
+    const vix =
+      vixData.chart.result[0].meta.regularMarketPrice;
+
+    const brent =
+      brentData.chart.result[0].meta.regularMarketPrice;
+
+    res.status(200).json({
+      vix,
+      brent
     });
 
   } catch (error) {
 
-    response.status(500).json({
-      error: "Failed to fetch market data"
+    res.status(500).json({
+      error: "Market API failed"
     });
 
   }

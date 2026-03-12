@@ -1,44 +1,50 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <title>Oil Crisis Monitor</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
 body{
-font-family: Arial;
+font-family:Arial;
 background:#0f172a;
 color:white;
 text-align:center;
-padding:40px;
-}
-
-h1{
-margin-bottom:30px;
-}
-
-button{
-background:#22c55e;
-color:white;
-border:none;
-padding:12px 24px;
-font-size:18px;
-border-radius:8px;
-cursor:pointer;
-}
-
-button:hover{
-background:#16a34a;
+padding:30px;
 }
 
 .card{
 background:#1e293b;
 padding:20px;
-margin:10px;
+margin:15px;
 border-radius:10px;
 display:inline-block;
-min-width:200px;
+min-width:220px;
+}
+
+button{
+background:#22c55e;
+border:none;
+padding:12px 24px;
+font-size:18px;
+border-radius:8px;
+cursor:pointer;
+color:white;
+}
+
+canvas{
+background:white;
+border-radius:10px;
+margin-top:30px;
+}
+
+iframe{
+border-radius:10px;
+margin-top:30px;
 }
 
 </style>
@@ -53,13 +59,21 @@ min-width:200px;
 
 <div id="dashboard"></div>
 
+<canvas id="oilChart" width="600" height="300"></canvas>
+
+<h2>Hormuz Tanker Traffic</h2>
+
+<iframe
+width="800"
+height="450"
+src="https://www.marinetraffic.com/en/ais/home/centerx:56.5/centery:26.6/zoom:6"
+></iframe>
+
 <script>
 
+let chart;
+
 async function runMonitor(){
-
-document.getElementById("dashboard").innerHTML="Loading...";
-
-try{
 
 const response = await fetch("/api/prices");
 const data = await response.json();
@@ -72,59 +86,59 @@ const tankerRate = 120000;
 
 let score = 0;
 
-if(vix > 25) score += 1;
-if(vix > 35) score += 2;
+if(vix>25) score++;
+if(vix>35) score+=2;
 
-if(brent > 100) score += 1;
-if(brent > 120) score += 2;
+if(brent>100) score++;
+if(brent>120) score+=2;
 
-let status = "Normal";
+let status="Normal";
 
-if(score >= 4) status = "Stress";
-if(score >= 6) status = "Crisis";
+if(score>=4) status="Stress";
+if(score>=6) status="Crisis";
 
 document.getElementById("dashboard").innerHTML = `
 
-<div class="card">
-<h3>VIX</h3>
-<p>${vix}</p>
-</div>
+<div class="card"><h3>VIX</h3>${vix}</div>
 
-<div class="card">
-<h3>Brent</h3>
-<p>$${brent}</p>
-</div>
+<div class="card"><h3>Brent</h3>$${brent}</div>
 
-<div class="card">
-<h3>Hormuz Traffic</h3>
-<p>${hormuzTraffic} tankers/day</p>
-</div>
+<div class="card"><h3>Hormuz Traffic</h3>${hormuzTraffic}</div>
 
-<div class="card">
-<h3>VLCC Rate</h3>
-<p>$${tankerRate}/day</p>
-</div>
+<div class="card"><h3>VLCC Rate</h3>$${tankerRate}</div>
 
-<div class="card">
-<h3>Risk Score</h3>
-<p>${score}</p>
-</div>
+<div class="card"><h3>Risk Score</h3>${score}</div>
 
-<div class="card">
-<h3>Status</h3>
-<p>${status}</p>
-</div>
+<div class="card"><h3>Status</h3>${status}</div>
 
 `;
 
-}
-
-catch(error){
-
-document.getElementById("dashboard").innerHTML =
-"Error loading data. Refresh and try again.";
+updateChart(brent);
 
 }
+
+function updateChart(price){
+
+const ctx = document.getElementById("oilChart");
+
+if(chart){
+chart.data.datasets[0].data.push(price);
+chart.update();
+return;
+}
+
+chart = new Chart(ctx,{
+type:"line",
+data:{
+labels:["Now"],
+datasets:[{
+label:"Brent Oil",
+data:[price],
+borderColor:"red",
+borderWidth:3
+}]
+}
+});
 
 }
 

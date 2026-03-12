@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Oil Crisis Monitor</title>
 
 <style>
@@ -13,27 +14,35 @@ text-align:center;
 padding:40px;
 }
 
-.card{
-background:#1e293b;
-padding:20px;
-margin:15px;
-border-radius:10px;
-display:inline-block;
-min-width:220px;
+h1{
+margin-bottom:30px;
 }
 
 button{
-padding:12px 24px;
-font-size:18px;
-border:none;
-border-radius:8px;
 background:#22c55e;
 color:white;
+border:none;
+padding:12px 24px;
+font-size:18px;
+border-radius:8px;
 cursor:pointer;
-margin-top:20px;
+}
+
+button:hover{
+background:#16a34a;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:10px;
+border-radius:10px;
+display:inline-block;
+min-width:200px;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -46,37 +55,14 @@ margin-top:20px;
 
 <script>
 
-async function getPrice(symbol){
-
-const url = `https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
-
-const res = await fetch(url);
-const data = await res.json();
-
-return data.quoteResponse.result[0].regularMarketPrice;
-
-}
-
-function riskScore(vix, brent){
-
-let score = 0;
-
-if(vix > 25) score += 1;
-if(vix > 35) score += 2;
-
-if(brent > 100) score += 1;
-if(brent > 120) score += 2;
-
-return score;
-
-}
-
 async function runMonitor(){
 
 document.getElementById("dashboard").innerHTML="Loading...";
 
-const res = await fetch("/api/prices");
-const data = await res.json();
+try{
+
+const response = await fetch("/api/prices");
+const data = await response.json();
 
 const vix = data.vix;
 const brent = data.brent;
@@ -86,31 +72,54 @@ const tankerRate = 120000;
 
 let score = 0;
 
-if(vix>25) score++;
-if(vix>35) score+=2;
-if(brent>100) score++;
-if(brent>120) score+=2;
+if(vix > 25) score += 1;
+if(vix > 35) score += 2;
 
-let status="Normal";
-if(score>=4) status="Stress";
-if(score>=6) status="Crisis";
+if(brent > 100) score += 1;
+if(brent > 120) score += 2;
+
+let status = "Normal";
+
+if(score >= 4) status = "Stress";
+if(score >= 6) status = "Crisis";
 
 document.getElementById("dashboard").innerHTML = `
 
-<div class="card"><h3>VIX</h3>${vix}</div>
-<div class="card"><h3>Brent</h3>$${brent}</div>
-<div class="card"><h3>Hormuz Traffic</h3>${hormuzTraffic}</div>
-<div class="card"><h3>VLCC Rates</h3>$${tankerRate}</div>
-<div class="card"><h3>Risk Score</h3>${score}</div>
-<div class="card"><h3>Status</h3>${status}</div>
+<div class="card">
+<h3>VIX</h3>
+<p>${vix}</p>
+</div>
+
+<div class="card">
+<h3>Brent</h3>
+<p>$${brent}</p>
+</div>
+
+<div class="card">
+<h3>Hormuz Traffic</h3>
+<p>${hormuzTraffic} tankers/day</p>
+</div>
+
+<div class="card">
+<h3>VLCC Rate</h3>
+<p>$${tankerRate}/day</p>
+</div>
+
+<div class="card">
+<h3>Risk Score</h3>
+<p>${score}</p>
+</div>
+
+<div class="card">
+<h3>Status</h3>
+<p>${status}</p>
+</div>
 
 `;
 
 }
 
-}
-
-catch(err){
+catch(error){
 
 document.getElementById("dashboard").innerHTML =
 "Error loading data. Refresh and try again.";
